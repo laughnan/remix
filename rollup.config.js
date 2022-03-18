@@ -383,6 +383,44 @@ function remixNode() {
 }
 
 /** @returns {import("rollup").RollupOptions[]} */
+function remixCloudflare() {
+  let sourceDir = "packages/remix-cloudflare";
+  let outputDir = "build/node_modules/@remix-run/cloudflare";
+  let version = getVersion(sourceDir);
+
+  return [
+    {
+      external(id) {
+        return isBareModuleId(id);
+      },
+      input: `${sourceDir}/index.ts`,
+      output: {
+        banner: createBanner("@remix-run/cloudflare", version),
+        dir: outputDir,
+        format: "cjs",
+        preserveModules: true,
+        exports: "named",
+      },
+      plugins: [
+        babel({
+          babelHelpers: "bundled",
+          exclude: /node_modules/,
+          extensions: [".ts", ".tsx"],
+        }),
+        nodeResolve({ extensions: [".ts", ".tsx"] }),
+        copy({
+          targets: [
+            { src: `LICENSE.md`, dest: outputDir },
+            { src: `${sourceDir}/package.json`, dest: outputDir },
+            { src: `${sourceDir}/README.md`, dest: outputDir },
+          ],
+        }),
+      ],
+    },
+  ];
+}
+
+/** @returns {import("rollup").RollupOptions[]} */
 function remixCloudflareWorkers() {
   let sourceDir = "packages/remix-cloudflare-workers";
   let outputDir = "build/node_modules/@remix-run/cloudflare-workers";
@@ -780,6 +818,7 @@ export default function rollup(options) {
     ...remixDev(options),
     ...remixServerRuntime(options),
     ...remixNode(options),
+    ...remixCloudflare(options),
     ...remixCloudflarePages(options),
     ...remixCloudflareWorkers(options),
     ...remixServerAdapters(options),
